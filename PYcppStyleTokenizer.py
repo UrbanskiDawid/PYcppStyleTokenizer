@@ -1,3 +1,8 @@
+#
+# this is an extension of:
+# https://docs.python.org/3.2/library/re.html#writing-a-tokenizer
+#
+
 import collections
 import re
 
@@ -8,7 +13,8 @@ Token = collections.namedtuple('Token', [
  'line',        #line mumber (0..n)
  'column',      #column in line (0...n)
  'blockDepth',  # {} block depth
- 'argDepth'     # () arguments depth
+ 'argDepth',    # () arguments depth
+ 'arrDepth',    # [] array depth
 ]) 
 
 def tokenize(input):
@@ -21,10 +27,12 @@ def tokenize(input):
         ('ASSIGN',     r'='),              # Assignment operator
         ('END',        r';'),              # Statement terminator
         ('NEXT',       r','),              # Argumnet separator
-        ('BLOCKSTART',r'{'),               # Start of new block of code
-        ('BLOCKEND',  r'}'),               # End of block of code
-        ('ARGSTART',   r'\('),             # Start of new agrument block
+        ('BLOCKSTART', r'{'),              # Start of new block of code (has depth)
+        ('BLOCKEND',   r'}'),              # End of block of code
+        ('ARGSTART',   r'\('),             # Start of new agrument block (has depth)
         ('ARGEND',     r'\)'),             # End of argument block
+        ('ARRSTART',   r'\['),             # Start of array block (has depth)
+        ('ARREND',     r'\]'),             # End of array block
         ('STRING',     r'"([^"\\]|\\.)*"'),# String (can contain quotes)
         ('ID',         r'[A-Za-z_]+'),     # Identifiers
         ('_COMMENT1',  r'\/\/[^\n]*'),     # single line comment
@@ -37,7 +45,7 @@ def tokenize(input):
     tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification) #join all into one regexp
     get_token = re.compile(tok_regex,re.DOTALL).match #comile rexexp. '.' can be newnline
 
-    line = pos = line_start = depth = arg =0 #values for while loop all 0
+    line = pos = line_start = depth = arg = arr =  0 #values for while loop all 0
 
     mo = get_token(input)
     while mo is not None:
@@ -45,14 +53,13 @@ def tokenize(input):
       val = mo.group(typ)
 
       if typ != 'SKIP':
-        if typ == 'BLOCKSTART':
-          depth+=1
-        if typ == 'ARGSTART':
-          arg+=1
-        if typ == '_NL' or typ == '_COMMENT1':
+        if   typ == 'BLOCKSTART': depth+=1
+        elif typ == 'ARGSTART':   arg+=1
+        elif typ == 'ARRSTART':   arr+=1
+        elif typ == '_NL' or typ == '_COMMENT1':
           line_start = pos
-          line += 1
-        if typ == '_COMMENT2':
+          line += 1	
+        elif typ == '_COMMENT2':
           for x in val:
             if x=="\n":
               line+=1
@@ -63,12 +70,11 @@ def tokenize(input):
             typ = 'KEYWORD'
           elif  type == 'ID' and val in keywordsTypes: #translate ID to 'TYPE'
             typ = 'TYPE'
-          yield Token(typ, val, line, mo.start()-line_start,depth,arg)
+          yield Token(typ, val, line, mo.start()-line_start,depth,arg,arr)
 
-        if typ == 'ARGEND':
-           arg-=1
-        if typ == 'BLOCKEND':
-          depth-=1
+        if   typ == 'BLOCKEND': depth-=1
+        elif typ == 'ARGEND':   arg-=1
+        elif typ == 'ARREND':   arr-=1
       #if skip
 
       pos = mo.end()

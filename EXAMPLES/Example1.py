@@ -1,8 +1,18 @@
+import sys
+sys.path.append("..") # Adds location od PYcppStyleTokenizer.py to python modules path.
+
 from PYcppStyleTokenizer import tokenize
 
 input = '''//comment1
 void functionA(int a,int b)
 {
+  int a1[2] = {1,0};
+
+  int a2[2][2] = {  
+   {0, 1},   /*  row 0 */
+   {4, 5},   /*  row 1 */
+  };
+
 /*multi
 line
  comment2*/
@@ -13,9 +23,10 @@ int c = 0;
  }
 if(a <= b) { f_do(a); }
 
+
 for(int i=0;i<10;i++)
 {
-  print(i);
+  print( functionA(i,i) );
 }
 
 }'''
@@ -39,6 +50,10 @@ for token in tokenize(input):
   if token.argDepth:
     argSpc = ''.join([ '-' for i in range(0,token.argDepth) ])+'>'
 
-  print '%s[%4d:%4d]: %10s %s %s' % (blockSpc,token.line,token.column,token.typ,argSpc, token.value)
+  arrSpc = '' #indentation of array
+  if token.arrDepth:
+    arrSpc = '<-'+''.join([ '-' for i in range(0,token.argDepth) ])
+	
+  print '%s[%4d:%4d]: %10s %s %s %s' % (blockSpc,token.line,token.column,token.typ,argSpc,token.value,arrSpc)
 
 print "==================================================="
