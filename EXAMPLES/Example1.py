@@ -8,7 +8,7 @@ void functionA(int a,int b)
 {
   int a1[2] = {1,0};
 
-  int a2[2][2] = {  
+  int banana2[2][2] = {
    {0, 1},   /*  row 0 */
    {4, 5},   /*  row 1 */
   };
