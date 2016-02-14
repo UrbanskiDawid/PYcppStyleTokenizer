@@ -68,7 +68,7 @@ def tokenize(input):
           val = mo.group(typ)
           if typ == 'ID' and val in keywords: #translate ID to 'KEYWORD'
             typ = 'KEYWORD'
-          elif  type == 'ID' and val in keywordsTypes: #translate ID to 'TYPE'
+          elif  typ == 'ID' and val in keywordsTypes: #translate ID to 'TYPE'
             typ = 'TYPE'
           yield Token(typ, val, line, mo.start()-line_start,depth,arg,arr)
 
