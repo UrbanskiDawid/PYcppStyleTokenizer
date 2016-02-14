@@ -17,7 +17,7 @@ Token = collections.namedtuple('Token', [
  'arrDepth',    # [] array depth
 ]) 
 
-def tokenize(input):
+def tokenize(input,visibleNewLine=False):
     keywords      = {'if', 'private', 'for', 'while', 'return'}
     keywordsTypes = {'void', 'int','float'}
 
@@ -35,11 +35,11 @@ def tokenize(input):
         ('ARREND',     r'\]'),             # End of array block
         ('STRING',     r'"([^"\\]|\\.)*"'),# String (can contain quotes)
         ('ID',         r'[A-Za-z][\w]*'),  # Identifiers
-        ('_COMMENT1',  r'\/\/[^\n]*'),     # single line comment
-        ('_COMMENT2',  r'/\*.+?\*/'),      # multiline comment
+        ('COMMENT1',   r'\/\/[^\n]*'),     # single line comment
+        ('COMMENT2',   r'/\*.*?\*/'),      # multiline comment
         ('OP',         r'[+*\/\-]'),       # Arithmetic operators
         ('CMP',        r'[\<\>]\=?'),      # Comparators <,>,<=,>=
-        ('_NL',        r'\n'),             # Line endings
+        ('NL',         r'\n'),             # Line endings
         ('SKIP',       r'[ \t]')           # Skip over spaces and tabs
     ]
     tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification) #join all into one regexp
@@ -56,27 +56,24 @@ def tokenize(input):
         if   typ == 'BLOCKSTART': depth+=1
         elif typ == 'ARGSTART':   arg+=1
         elif typ == 'ARRSTART':   arr+=1
-        elif typ == '_NL' or typ == '_COMMENT1':
-          line_start = pos
-          line += 1	
-        elif typ == '_COMMENT2':
-          for x in val:
-            if x=="\n":
-              line+=1
-        
-        if typ[0] != '_': #ignore _TOKENs
-          val = mo.group(typ)
+
+        if visibleNewLine or typ != 'NL': #hide new line is requested
           if typ == 'ID' and val in keywords: #translate ID to 'KEYWORD'
             typ = 'KEYWORD'
           elif  typ == 'ID' and val in keywordsTypes: #translate ID to 'TYPE'
             typ = 'TYPE'
-          yield Token(typ, val, line, mo.start()-line_start,depth,arg,arr)
+          yield Token(typ, val, line, mo.start()-line_start,depth,arg,arr) #add new token
+
+        if typ == 'NL':
+          line_start = mo.start()+1 
+          line += 1
 
         if   typ == 'BLOCKEND': depth-=1
         elif typ == 'ARGEND':   arg-=1
         elif typ == 'ARREND':   arr-=1
-      #if skip
+        elif typ == 'COMMENT2': line+=val.count("\n")
 
+      #if skip
       pos = mo.end()
       mo = get_token(input, pos)
     #while

@@ -34,29 +34,30 @@ for(int i=0;i<10;i++)
 print "== INPUT =========================================="
 line=0
 for lineStr in input.split("\n"):
-  sys.stdout.write('%4d:%s\n' % (line,lineStr))
+  print '%4d: %s' % (line,lineStr)
   line+=1
 
 print "==================================================="
 
 print "== OUTPUT: ========================================"
-line = -1
+line = 0
+
+def twoLiner(a,b):
+  l=len(a)
+  if len(b)>l: l=len(b)
+  return (a.ljust(l),b.ljust(l))
+  
+lineA=lineB="|"
 for token in tokenize(input):
 
-  blockSpc = '' #indentation of code block
-  if token.blockDepth:
-    blockSpc= ''.join([ '-' for i in range(0,token.blockDepth) ])+'>'
+  if line!= token.line:
+    line=token.line
+    print lineA+"\n"+lineB
+    lineA=lineB="|"
 
-  argSpc = '' #indentation of arguments
-  if token.argDepth:
-    argSpc = ''.join([ '-' for i in range(0,token.argDepth) ])+'>'
+  ab=twoLiner(token.typ,token.value.replace("\n","\\n"))
 
-  arrSpc = '' #indentation of array
-  if token.arrDepth:
-    arrSpc = '<-'+''.join([ '-' for i in range(0,token.argDepth) ])
-
-  value=token.value.replace("\n","\\n")
-
-  print '[%4d:%4d]:%s %10s %s %s %s' % (token.line,token.column,blockSpc,token.typ,argSpc,value,arrSpc)
+  lineA+=ab[0]+"|"
+  lineB+=ab[1]+"|"
 
 print "==================================================="
