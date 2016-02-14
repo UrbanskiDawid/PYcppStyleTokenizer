@@ -34,7 +34,7 @@ def tokenize(input):
         ('ARRSTART',   r'\['),             # Start of array block (has depth)
         ('ARREND',     r'\]'),             # End of array block
         ('STRING',     r'"([^"\\]|\\.)*"'),# String (can contain quotes)
-        ('ID',         r'[A-Za-z_]+'),     # Identifiers
+        ('ID',         r'[A-Za-z][\w]?'),  # Identifiers
         ('_COMMENT1',  r'\/\/[^\n]*'),     # single line comment
         ('_COMMENT2',  r'/\*.+?\*/'),      # multiline comment
         ('OP',         r'[+*\/\-]'),       # Arithmetic operators
